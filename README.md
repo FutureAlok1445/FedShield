@@ -29,6 +29,13 @@ By exchanging only mathematically encrypted model weight updates (gradients) rat
 
 ## 1. The Business Case & Problem Statement
 
+### Core Project Scope & Delivery
+FedShield was specifically engineered to fulfill four critical architectural mandates:
+1. **Cross-Border Fraud Detection:** Identifying coordinated, distributed attacks across international banking borders without violating data sovereignty laws.
+2. **Graph-Based Deep Learning:** Utilizing network-topology features (transaction graphs) combined with advanced ML architectures (LightGBM/ONNX) to map relationships between malicious entities.
+3. **AI Explainability (SHAP):** Ensuring that every AI decision is legally defensible by generating real-time SHAP (SHapley Additive exPlanations) values to explain *why* a transaction was blocked.
+4. **UPI / NPCI Integration Readiness:** Architected to handle high-velocity, sub-10ms transaction streams native to India's Unified Payments Interface (UPI) and the National Payments Corporation of India (NPCI) standards, alongside compliance with RBI DPSP.
+
 ### The "Siloed Knowledge" Problem
 Organized fraud rings execute sophisticated attacks by distributing small, seemingly legitimate transactions across multiple banks. For example:
 - Bank A sees a $500 transfer (Looks normal).
@@ -188,7 +195,7 @@ The library distributed to participating banks to install inside their own firew
 
 The FedShield Web Dashboard (built with React 19, Vite, Three.js, and GSAP) provides fraud analysts with a cinematic, real-time command center.
 
-### The Dashboard Layout (ASCII Map)
+### 7.1. Main Dashboard (Command Center)
 ```text
 +-----------------------------------------------------------------------------+
 |  FedShield OS v1.0   [ Dashboard ] [ Analytics ] [ Network ] [ Admin ]      |
@@ -210,6 +217,45 @@ The FedShield Web Dashboard (built with React 19, Vite, Three.js, and GSAP) prov
 | | > [WARNING]  Bank B submitted gradient with low cosine similarity.      | |
 | | > [INFO]     Round 41 model anchored to Polygon: 0x9f8a...2b4c          | |
 | +-------------------------------------------------------------------------+ |
++-----------------------------------------------------------------------------+
+```
+
+### 7.2. Advanced Analytics & Telemetry Page
+```text
++-----------------------------------------------------------------------------+
+|  FedShield OS v1.0   [ Dashboard ] [ Analytics ] [ Network ] [ Admin ]      |
++-----------------------------------------------------------------------------+
+|  FLTrust AUC Accuracy Trend         |  Gateway Real-Time Latency SLA        |
+|                                     |                                       |
+|  1.00 |       *---*---*             |  10ms |                               |
+|  0.95 |      /         \            |   8ms |       /\                      |
+|  0.90 | *---*           *---*       |   6ms |      /  \  /\                 |
+|  0.85 |                             |   4ms | *---*    \/  \*---*---*       |
+|       +----------------------       |       +------------------------       |
+|         R39 R40 R41 R42 R43         |        1s  2s  3s  4s  5s  6s         |
++-----------------------------------------------------------------------------+
+|  Bank Trust Scores (Heatmap)                                                |
+|  [ Bank A: 0.98 ] [ Bank B: 0.95 ] [ Bank C: 0.99 ] [ Bank D: 0.00 ❌ ]      |
+|  [ Bank E: 0.88 ] [ Bank F: 0.92 ] [ Bank G: 0.91 ] [ Bank H: 0.96 ]        |
++-----------------------------------------------------------------------------+
+```
+
+### 7.3. Legal Compliance & Audit Page
+```text
++-----------------------------------------------------------------------------+
+|  FedShield OS v1.0   [ Dashboard ] [ Analytics ] [ Network ] [ Admin ]      |
++-----------------------------------------------------------------------------+
+|  REGULATORY REPORT GENERATION (Powered by Celery & ReportLab)               |
+|                                                                             |
+|  Select Bank: [ Global Standard Bank ▼ ]                                    |
+|  Time Range:  [ Last 30 Days ▼ ]                                            |
+|                                                                             |
+|  [ Generate GDPR Privacy Audit PDF ]   [ Generate RBI DPSP Compliance PDF ] |
+|                                                                             |
+|  RECENT BLOCKCHAIN ANCHORS (Polygon L2)                                     |
+|  - Round 42: 0x8f9b...11c2 (Confirmed - 12 block confirmations)             |
+|  - Round 41: 0x9f8a...2b4c (Confirmed - 28 block confirmations)             |
+|  - Round 40: 0x11a2...99fd (Confirmed - 44 block confirmations)             |
 +-----------------------------------------------------------------------------+
 ```
 
