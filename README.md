@@ -84,6 +84,16 @@ Before a gradient even reaches the FLTrust aggregator, it must pass three strict
 2. **Directional Check:** Does the cosine similarity against the round's mean indicate a sign-flip attack? ($c_i < -0.3$)
 3. **Historical Deviation:** Has this specific bank drastically changed its gradient distribution compared to its last 10 rounds? ($> 4\sigma$ deviation).
 
+**[ Terminal Log: Simulated Attack Defense ]**
+```text
+[14:32:01] INFO  | Round 42 - Receiving gradients from 15 banks...
+[14:32:05] WARN  | Bank_London_7 submitted gradient. Norm: 42.1 (Z=5.2)
+[14:32:05] CRIT  | AnomalyDetector: Gradient scaling attack detected!
+[14:32:05] ERROR | FLTrust: Cosine Similarity -0.89 (Sign-Flip Attack).
+[14:32:05] SEC   | Action: Trust Score set to 0.0. Bank_London_7 isolated.
+[14:32:06] INFO  | Round 42 - Aggregation complete. Model preserved.
+```
+
 ### 3.4. Local SHAP Explainability Engine (Zero API Dependency)
 Enterprise banks cannot send sensitive transaction data to third-party APIs (like OpenAI) to ask for explanations. Explainability must be mathematically proven on the server. FedShield achieves this in `onnxRunner.js`:
 - As the scoring engine iterates over the 24 canonical features (like `is_new_device` or `graph_centrality_score`), it computes the exact mathematical `contribution` of each feature against the model's current weights.
@@ -262,6 +272,25 @@ The FedShield Web Dashboard (built with React 19, Vite, Three.js, and GSAP) prov
 |  - Round 42: 0x8f9b...11c2 (Confirmed - 12 block confirmations)             |
 |  - Round 41: 0x9f8a...2b4c (Confirmed - 28 block confirmations)             |
 |  - Round 40: 0x11a2...99fd (Confirmed - 44 block confirmations)             |
++-----------------------------------------------------------------------------+
+```
+
+### 7.4. Network Topology Map (Live P2P Routing)
+```text
++-----------------------------------------------------------------------------+
+|  FedShield OS v1.0   [ Dashboard ] [ Analytics ] [ Network ] [ Admin ]      |
++-----------------------------------------------------------------------------+
+|  FEDERATED NETWORK STATUS: [ SECURE ]       |  UPI / NPCI GATEWAY [ LIVE ]  |
+|                                             |                               |
+|        [ Bank of NY ]         [ RBI Node ]  |  API Gateway (Fastify)        |
+|           /       \              /          |  Throughput: 14,200 req/sec   |
+|          / (TLS)   \ (TLS)      / (TLS)     |  Avg Latency: 4.2ms           |
+|         /           \          /            |  Memory: 412 MB / 8 GB        |
+|  [ Federation Server (Aggregator) ]         |                               |
+|         \           /                       +-------------------------------+
+|          \         /                        |  REDIS EVENT BUS              |
+|           \       /                         |  > PUBLISH alerts:bank_ny     |
+|       [ Bank of Tokyo ]                     |  > PUBLISH alerts:bank_tokyo  |
 +-----------------------------------------------------------------------------+
 ```
 
