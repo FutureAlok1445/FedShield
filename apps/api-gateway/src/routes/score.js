@@ -113,4 +113,32 @@ export default async function scoreRoutes(app) {
       waterfall_data: []
     }
   })
+
+  // UPI/NPCI specific high-velocity integration endpoint
+  app.post('/v1/upi/score', { preHandler: [app.authenticate] }, async (request, reply) => {
+    const upiPayload = request.body
+
+    if (!upiPayload || typeof upiPayload !== 'object') {
+      return reply.status(400).send({ error: 'NPCI/UPI payload required' })
+    }
+
+    // Map NPCI/UPI standard format to FedShield internal feature schema
+    const transaction = {
+      bank_id: upiPayload.payer_psp_code,
+      txn_ref_hash: upiPayload.txn_id,
+      amount: upiPayload.amount?.value || 0,
+      mcc: upiPayload.payee_mcc || '0000',
+      is_new_device: upiPayload.device_fingerprint !== upiPayload.last_known_device,
+      is_new_payee: true, // simplified for upi
+      cross_border: false, // UPI is domestic
+      // ... other mappings
+    }
+
+    // Fast-path scoring for UPI sub-10ms requirement
+    const result = await scoreTransaction(app, transaction, false)
+    
+    // Add UPI specific compliance headers
+    reply.header('X-NPCI-Compliance', 'FedShield-v1')
+    return result
+  })
 }

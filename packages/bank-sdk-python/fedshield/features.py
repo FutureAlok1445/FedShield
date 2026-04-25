@@ -23,7 +23,7 @@ FEATURE_NAMES = [
     'hour_of_day', 'weekend_flag',
     'time_since_last_txn_min', 'failed_attempts_24h',
     'payee_age_days', 'merchant_risk_score',
-    'device_country_change', 'channel_risk_score', 'session_duration_sec',
+    'device_country_change', 'graph_centrality_score', 'session_duration_sec',
 ]
 
 HIGH_RISK_MCCS = {5912, 5944, 5999, 7995, 5816, 5817}
@@ -69,7 +69,7 @@ class FeatureExtractor:
         features[19] = float(txn.get('payee_age_days', 365))
         features[20] = float(txn.get('merchant_risk_score', txn.get('mcc_risk_score', 0.3)))
         features[21] = 1.0 if txn.get('device_country_change', txn.get('ip_country_change', False)) else 0.0
-        features[22] = float(txn.get('channel_risk_score', 0.3))
+        features[22] = float(graph_stats.get('graph_centrality_score', 0.5)) if graph_stats else 0.5
         features[23] = float(txn.get('session_duration_sec', 120))
 
         return features.tolist()

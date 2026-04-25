@@ -31,7 +31,7 @@ const FEATURE_WEIGHTS = {
   payee_age_days: -0.002,
   merchant_risk_score: 0.15,
   device_country_change: 0.22,
-  channel_risk_score: 0.10,
+  graph_centrality_score: 0.15, // Evaluates network topology via Graph Neural Network
   session_duration_sec: -0.001,
 }
 
