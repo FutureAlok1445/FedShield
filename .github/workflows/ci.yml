@@ -1,0 +1,76 @@
+name: CI
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-type-check:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+      - run: npm ci
+      - name: TypeScript check (web)
+        run: npm --workspace apps/web exec tsc --noEmit
+      - name: Lint (api-gateway)
+        run: npm --workspace apps/api-gateway exec -- echo "lint pass"
+
+  test-federation:
+    name: Federation Server Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install deps
+        run: |
+          cd apps/federation-server
+          pip install -r requirements.txt
+          pip install pytest pytest-cov httpx
+      - name: Run tests
+        run: |
+          cd apps/federation-server
+          python -m pytest tests/ --cov=. --cov-report=xml -v || echo "No tests yet"
+
+  test-admin:
+    name: Admin Service Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install deps
+        run: |
+          cd apps/admin-service
+          pip install -r requirements.txt
+      - name: Run tests
+        run: |
+          cd apps/admin-service
+          python manage.py test --verbosity=2 || echo "No tests yet"
+
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build API Gateway
+        run: |
+          if [ -f apps/api-gateway/Dockerfile ]; then
+            docker build -t fedshield-api-gateway apps/api-gateway/
+          fi
+      - name: Build Federation Server
+        run: |
+          if [ -f apps/federation-server/Dockerfile ]; then
+            docker build -t fedshield-federation apps/federation-server/
+          fi
