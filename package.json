@@ -1,0 +1,22 @@
+{
+  "name": "fedshield",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "apps/api-gateway",
+    "packages/bank-sdk-node",
+    "packages/shared-types"
+  ],
+  "scripts": {
+    "install:js": "npm install",
+    "build:web": "npm --workspace apps/web run build",
+    "start:web": "npm --workspace apps/web run dev",
+    "start:api": "npm --workspace apps/api-gateway run dev",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.2",
+    "eslint": "^8.57.0",
+    "prettier": "^3.0.0"
+  }
+}
