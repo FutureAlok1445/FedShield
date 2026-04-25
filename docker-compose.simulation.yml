@@ -1,0 +1,87 @@
+# FedShield Simulation Docker Compose (PRD §18, FR-18)
+# Spins up full multi-bank local simulation with N simulated banks.
+#
+# Usage:
+#   docker compose -f docker-compose.simulation.yml up
+
+services:
+  # ─── Core Infrastructure ───────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: fedshield
+      POSTGRES_USER: fedshield
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_sim:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fedshield"]
+      interval: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 5
+
+  # ─── Federation Server ─────────────────────────────────
+  federation-server:
+    build:
+      context: ./apps/federation-server
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgres://fedshield:password@postgres:5432/fedshield
+      REDIS_URL: redis://redis:6379
+      IPFS_URL: ""
+      POLYGON_RPC_URL: ""
+      PORT: 8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ─── API Gateway ───────────────────────────────────────
+  api-gateway:
+    build:
+      context: ./apps/api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://fedshield:password@postgres:5432/fedshield
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: simulation-jwt-secret-32-chars-min
+      ML_ENGINE_URL: http://federation-server:8000
+      PORT: 3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ─── Bank Simulator ────────────────────────────────────
+  bank-simulator:
+    build:
+      context: .
+      dockerfile: simulation/Dockerfile
+    environment:
+      FEDERATION_SERVER_URL: http://federation-server:8000
+      NUM_BANKS: 5
+      NUM_ROUNDS: 10
+      FRAUD_RATE: 0.02
+      ATTACK_MODE: gradient_scaling
+      ATTACK_BANKS: 1
+    depends_on:
+      - federation-server
+
+volumes:
+  pgdata_sim:

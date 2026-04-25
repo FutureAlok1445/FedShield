@@ -1,0 +1,98 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fedshield
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: fedshield
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U fedshield']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --requirepass password
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', 'password', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api-gateway:
+    build:
+      context: ./apps/api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgres://fedshield:password@postgres:5432/fedshield
+      REDIS_URL: redis://:password@redis:6379
+      JWT_SECRET: dev-local-jwt-secret-32chars-min
+      ML_ENGINE_URL: http://federation-server:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  federation-server:
+    build:
+      context: ./apps/federation-server
+      dockerfile: Dockerfile
+    ports:
+      - '8000:8000'
+    environment:
+      FEDERATION_DATABASE_URL: postgres://fedshield:password@postgres:5432/fedshield
+      FEDERATION_REDIS_URL: redis://:password@redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  admin-service:
+    build:
+      context: ./apps/admin-service
+      dockerfile: Dockerfile
+    ports:
+      - '8002:8002'
+    environment:
+      DJANGO_SECRET_KEY: dev-local-django-secret-key
+      DEBUG: 'True'
+      ALLOWED_HOSTS: localhost,127.0.0.1,admin-service
+      DB_ENGINE: django.db.backends.postgresql
+      DB_NAME: fedshield
+      DB_USER: fedshield
+      DB_PASSWORD: password
+      DB_HOST: postgres
+      DB_PORT: 5432
+      CELERY_BROKER_URL: redis://:password@redis:6379/1
+      CELERY_RESULT_BACKEND: redis://:password@redis:6379/2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    ports:
+      - '5173:5173'
+    environment:
+      VITE_API_URL: http://localhost:3000
+
+volumes:
+  pgdata:
